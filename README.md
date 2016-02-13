@@ -22,4 +22,4 @@ Other projects this software depends on:<br>
 This project is still in development for initial release
 
 ### Licence
-This is not free or open source software. Please consult the licence file for details.
+This is not free or open source software. Please consult the [licence file](https://github.com/alisdairrobertson/vispecs/blob/master/LICENCE.md) for details.
