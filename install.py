@@ -19,19 +19,20 @@ def main():
         os.system("sudo pip install picamera")
 
     if query_yes_no("Download/Redownload python-seabreeze?", "no"):             # Ask the user if we want to redownload pyseabreeze
-        os.system("sudo wget \"https://github.com/ap--/python-seabreeze/archive/python-seabreeze-v0.5.1.tar.gz\"") # Download
+        os.system("sudo wget \"https://github.com/ap--/python-seabreeze/archive/python-seabreeze-v0.5.3.tar.gz\"") # Download
         os.system("sudo tar -xzvf python-seabreeze-v0.5.1.tar.gz")                   # Extract
-        os.system("sudo apt-get install python-numpy python-pip libusb-1.0-0")  # Make sure we have the dependencies
-        os.system("sudo pip install pyusb==1.0.0b1")
+        os.system("apt-get install build-essential python-numpy libusb-0.1-4 libusb-dev cython")  # Make sure we have the dependencies
 
-    if query_yes_no("Run python-seabreeze install?", 'no'):                     # Install python-seabreeze library
+    if query_yes_no("Run cseabreeze install?", 'no'):                           # Install python-seabreeze library
         os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && ./misc/install_udev_rules.sh") # Install udev rules
-        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && sudo python setup.py install --without-cseabreeze")  # Install without cseabreeze
+        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && ./misc/install_libseabreeze.sh") # Install cseabreeze
+        os.system("sudo mv /usr/local/lib/libseabreeze.so /usr/lib")            # Move the shared object to the correct lib folder (installs to the wrong one)
+        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && sudo python setup.py install")  # Install python-seabreeze
 
     if query_yes_no("Add USB to fstab for auto-mount? (Only do once)", 'no'):
         flashdriveLocation = config.get('storage', 'external')
         flashdriveLocation = "~/" + flashdriveLocation
-        os.system("mkdir " + flashdriveLocation)                              # Make directory to mount the flashdrive in the user's home directory
+        os.system("mkdir " + flashdriveLocation)                                # Make directory to mount the flashdrive in the user's home directory
         os.system('sudo bash -c "echo -e \'/dev/sda1\t' + flashdriveLocation + '\tvfat\tdefaults\t0\t0\' >> /etc/fstab"')                          # Add USB to fstab so it auto-mounts on boot
 
     hostname = config.get("system", "system-name")                              # Get the desired name from config
