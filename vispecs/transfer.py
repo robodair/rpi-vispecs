@@ -20,13 +20,18 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 
 		rettext = ftp.login()													# Login to the FTP
 		print ftpServer + ': ' + rettext
+		try :
+			rettext = ftp.mkd(ftpDirectory)										# Make directory if it doesn't already exist
+			print ftpServer + ': ' + rettext
+		except Exception as e:
+			print "[  VISPECS  ] /incoming directory probably already exists"
+			print e
 
-		rettext = ftp.mkd(ftpDirectory)											# Make directory if it doesn't already exist
-		print ftpServer + ': ' + rettext
 		rettext = ftp.cwd(ftpDirectory)											# Change to the directory
 		print ftpServer + ': ' + rettext
-		rettext = ftp.pwd() 													# Print the working directory for the FTP server
-		print ftpServer + ': ' + rettext
+
+		ftp.set_pasv(False)														# Set FTP mode to not passive (Bug workaround for a bug in ftplib)
+																				# It appears the ftplib sends the wrong IP on store commands when in passive mode
 
 	except Exception as e:														# If there was an exception in connecting to the server
 
@@ -36,36 +41,37 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 			print "[  VISPECS  ] Moving files to USB"
 			moveFilesToBackup(imagesLocal, imagesExternal,
 				spectrumLocal, spectrumExternal, sentSuffix)
-		return
+		return False
 
 	# ==============
 	# FTP TRANSFER
 	# ==============
 
-	for dir in (imagesLocal, imagesExternal, 									# For every directory that contains files to send
-		spectrumLocal, spectrumExternal):
-		extension = '.h5'														# Variable to specify file extension
+	for dir in (imagesLocal, spectrumLocal, imagesExternal, spectrumExternal):	# For every directory that contains files to send
+		extension = '.hdf5'														# Variable to specify file extension
 		if dir in (imagesLocal, imagesExternal):
 			extension = '.jpeg'													# Change extension if we're dealing with the image directories
 
-		for file in os.listdir(directory): 										# For each file to send in the current directory
+		for file in os.listdir(dir): 											# For each file to send in the current directory
 		    if file.endswith(extension): 										# Only upload the file type we want
 		        try:															# Try to upload the file
 		            print "[  VISPECS  ] uploading: " + dir + file				# Let us know what file we're uploading
 
 		            upfile = open(dir + file,'rb') 								# Open file
-		            retext = ftp.storbinary("STOR " + FTP_IMAGE_DIR + file, upfile) 		# Make upload
-		            upfile.close() 												# close file
-
+		            retext = ftp.storbinary("STOR " + file, upfile) 			# Make upload
 		            print ftpServer + ': ' + rettext							# Print FTP response
+					upfile.close() 												# close file
 
 		            shutil.move(dir + file, dir + sentSuffix + file)			# Move to a sent directory where it was
 
 		        except ftplib.all_errors as e:
-		            print file + "[  VISPECS  ] File not uploaded, error: " + e	# Print the error if we couldn't upload the file
+		            print "[  VISPECS  ] File " + file + "not uploaded, error: "
+					print e	# Print the error if we couldn't upload the file
+					return False
 
 	rettext = ftp.quit()														# Close our connection to the server
 	print ftpServer + ': ' + rettext
+	return True
 
 
 # Simply shuttle everything from the internal storage to the external storage
