@@ -38,14 +38,17 @@ def main():
     imageLocal = config.get(STORAGE, 'image-local')
     spectrumLocal = config.get(STORAGE, 'spectrum-local')
     sentSuffix = config.get(STORAGE, 'sent-dir')
+    extStorage = config.get(STORAGE, 'external')
     moveToExt = False                                                           # Flag whether to move sent files to external Storage
 
-    if (os.path.ismount(config.get(STORAGE, 'external'))):                      # If the USB is mounted
+    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")            # Try to mount the USB
+
+    if (os.path.ismount(extStorage)):                                           # If the USB is mounted
         imagePath = imageExt                                                    # Use external storage locations
         spectrumPath = spectrumExt
         moveToExt = True                                                        # Flag to move sent files to backup
 
-        if not os.path.exists(imageExt + sentSuffix):                          # If USB is mounted, make sure directories exist
+        if not os.path.exists(imageExt + sentSuffix):                           # If USB is mounted, make sure directories exist
             os.makedirs(imageExt + sentSuffix)
         if not os.path.exists(spectrumExt + sentSuffix):
             os.makedirs(spectrumExt + sentSuffix)
@@ -76,5 +79,6 @@ def main():
 
 def shutdown_pi():                                                              # Method to shutdown the pi
     #os.system("sudo shutdown now")
+    print "Would shut down here"
 
 if __name__ == "__main__": main()                                               # Main method (needed for this to run)
