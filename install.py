@@ -11,36 +11,31 @@ def main():
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read("./vispecs/vispecs.cfg")
 
-    if query_yes_no("Update System?", 'no'):                                          # Update the system
+    if query_yes_no("Update and install dependencies?", 'no'):                  # Update the system
         os.system("sudo apt-get update && sudo apt-get upgrade")
-
-    if query_yes_no("Run picamera install?", 'no'):                             # Install picamera
+        os.system("sudo apt-get install libhdf5-dev python-numpy python-dev libusb-dev cython")  # Make sure we have the dependencies for seabreeze
         os.system("sudo apt-get install python-pip")
         os.system("sudo pip install picamera")
+        os.system("sudo apt-get install python-h5py")                           # Install h5py so we can store spectrum readings in h5 files
+        os.system("sudo apt-get install i2c-tools")
+
 
     if query_yes_no("Download/Redownload python-seabreeze?", "no"):             # Ask the user if we want to redownload pyseabreeze
-        os.system("sudo wget \"https://github.com/ap--/python-seabreeze/archive/python-seabreeze-v0.5.3.tar.gz\"") # Download
-        os.system("sudo tar -xzvf python-seabreeze-v0.5.1.tar.gz")                   # Extract
-        os.system("apt-get install build-essential python-numpy libusb-0.1-4 libusb-dev cython")  # Make sure we have the dependencies
+        os.system("sudo wget -nc \"https://github.com/ap--/python-seabreeze/archive/python-seabreeze-v0.5.3.tar.gz\"") # Download
+        os.system("sudo tar -xzvf python-seabreeze-v0.5.3.tar.gz")                   # Extract
 
     if query_yes_no("Run cseabreeze install?", 'no'):                           # Install python-seabreeze library
-        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && ./misc/install_udev_rules.sh") # Install udev rules
-        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && ./misc/install_libseabreeze.sh") # Install cseabreeze
+        os.system("cd python-seabreeze-python-seabreeze-v0.5.3 && ./misc/install_udev_rules.sh") # Install udev rules
+        os.system("cd python-seabreeze-python-seabreeze-v0.5.3 && sudo ./misc/install_libseabreeze.sh") # Install cseabreeze
         os.system("sudo mv /usr/local/lib/libseabreeze.so /usr/lib")            # Move the shared object to the correct lib folder (installs to the wrong one)
-        os.system("cd python-seabreeze-python-seabreeze-v0.5.1 && sudo python setup.py install")  # Install python-seabreeze
-
-    if query_yes_no("Add USB to fstab for auto-mount? (Only do once)", 'no'):
-        flashdriveLocation = config.get('storage', 'external')
-        flashdriveLocation = "~/" + flashdriveLocation
-        os.system("mkdir " + flashdriveLocation)                                # Make directory to mount the flashdrive in the user's home directory
-        os.system('sudo bash -c "echo -e \'/dev/sda1\t' + flashdriveLocation + '\tvfat\tdefaults\t0\t0\' >> /etc/fstab"')                          # Add USB to fstab so it auto-mounts on boot
+        os.system("cd python-seabreeze-python-seabreeze-v0.5.3 && sudo python setup.py install")  # Install python-seabreeze
 
     hostname = config.get("system", "system-name")                              # Get the desired name from config
     hostname_number = config.getint("system", "system-number")
     hostname = hostname + str(hostname_number)
     if query_yes_no("Set system hostname to " + hostname + "?", 'no'):          # Ask if we should change the system hostname TODO if yes, increment the number
-        os.system("sudo bash -c \'echo " + hostname + " > /etc/hostname\'")     # edit /etc/hostname
         currenthostname = socket.gethostname()
+        os.system("sudo bash -c \'echo " + hostname + " > /etc/hostname\'")     # edit /etc/hostname
         os.system("sudo bash -c \"perl -pi -e \"s/" + currenthostname + "/"     # edit /etc/hosts
             + hostname + "/g\" /etc/hosts\"")
         os.system("sudo /etc/init.d/hostname.sh start")                         # restart hostname service
@@ -57,17 +52,17 @@ def main():
         os.system("sudo reboot")
 
     if query_yes_no("Install and configure hardware clock?", 'no'):              # Install and configure the RTC
-        os.system("sudo apt-get install i2c-tools")
         os.system("sudo i2cdetect -y 1")
         os.system("sudo modprobe rtc-ds1374")
         os.system("sudo bash -c 'echo ds1374 0x68 > /sys/class/i2c-adapter/i2c-1/new_device'")
         os.system("sudo hwclock -wu")                                           # Write current system time to RTC
 
-    if query_yes_no("Copy vispecs files to install/run at boot locations?", 'yes'):
-        # TODO when whole script run as root these commands do not succeed
-        os.system("sudo cp -r ./vispecs ~/vispecs")                                 # Copy the vispecs folder to user's home
-        os.system("sudo cp ./vispecs/vispecs.sh /etc/profile.d/vispecs.sh")         # Copy our hook to run on startup
-        os.system("sudo chmod 755 /etc/profile.d/vispecs.sh")                       # Make sure we can run the shell script
+    if query_yes_no("Install Vispecs??", 'yes'):
+        # TODO when whole script run as root these commands do not succeed (we want things installed as the pi user)
+        os.system("sudo cp -r ./vispecs ~/vispecs")                             # Copy the vispecs folder to user's home
+        os.system("sudo cp ./vispecs/vispecs.sh /etc/profile.d/vispecs.sh")     # Copy our hook to run on startup
+        os.system("sudo chmod 755 /etc/profile.d/vispecs.sh")                   # Make sure we can run the shell script
+        os.system("mkdir " + flashdriveLocation)                                # Make sure the directory for the flashdrive exists
 
 def query_yes_no(question, default="yes"):
     #Ask a yes/no question via raw_input() and return their answer.
