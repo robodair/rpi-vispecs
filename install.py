@@ -57,6 +57,7 @@ def main():
         os.system("sudo bash -c 'echo ds1374 0x68 > /sys/class/i2c-adapter/i2c-1/new_device'")
         os.system("sudo hwclock -wu")                                           # Write current system time to RTC
 
+    flashdriveLocation = config.get("storage", "external")
     if query_yes_no("Install Vispecs??", 'yes'):
         # TODO when whole script run as root these commands do not succeed (we want things installed as the pi user)
         os.system("sudo cp -r ./vispecs ~/vispecs")                             # Copy the vispecs folder to user's home
