@@ -18,6 +18,7 @@ def main():
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read("./vispecs/vispecs.cfg")
+    #TODO: if enternet connected, don't run scripts
 
     try:                                                                        # This try-except allows the user to prevent the scripts from running
         print "\n===================================================="
@@ -71,9 +72,12 @@ def main():
     ftpPass = config.get(FTP, 'ftp-password')
     ftpDirectory = config.get(FTP, 'ftp-directory')
 
-    transfer.make(ftpServer, ftpUser, ftpPass, ftpDirectory,
+    has_net = transfer.make(ftpServer, ftpUser, ftpPass, ftpDirectory,
         imageLocal, imageExt, spectrumLocal, spectrumExt, sentSuffix, moveToExt)
 
+    if has_net:
+        print "[  VISPECS  ] Setting hardware clock from system time\n"
+        os.system("sudo hwclock -wu")                                           # if we do have network, be sure to write the hardware clock
     print "[  VISPECS  ] Scripts complete, shutting down."
     shutdown_pi()
 
