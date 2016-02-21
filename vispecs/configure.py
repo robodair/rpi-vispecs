@@ -19,9 +19,9 @@ def main():
     if query_yes_no("Change System Number? Current: " + currenthostname, 'no'): # Ask to change system number?
         sys.stdout.write("Enter new number: ")
         choice = int(raw_input())
-        hostname += choice
+        hostname = hostname + str(choice)
 
-        config.set('system', 'system-number', choice)
+        config.set('system', 'system-number', str(choice))
 
         os.system("sudo bash -c \'echo " + hostname + " > /etc/hostname\'")     # edit /etc/hostname
         os.system("sudo bash -c \"perl -pi -e \"s/" + currenthostname + "/"     # edit /etc/hosts
@@ -40,7 +40,7 @@ def main():
 
     if query_yes_no("Change FTP Details?", 'no'):                               # Ask to change ftp login?
         sys.stdout.write("Enter FTP server: ")
-        server = raw_input().tolower()
+        server = raw_input()
         sys.stdout.write("Enter FTP username: ")
         uname = raw_input()
         sys.stdout.write("Enter FTP password: ")
