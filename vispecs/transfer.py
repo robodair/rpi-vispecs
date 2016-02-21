@@ -31,10 +31,11 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 	except Exception as e:														# If there was an exception in connecting to the server
 
 		print "[  VISPECS  ] Exception on ftp connection."
+		print e
 		if moveToExt:
 			print "[  VISPECS  ] Moving files to USB"
 			moveFilesToBackup(imagesLocal, imagesExternal,
-				spectrumLocal, spectrumExternal)
+				spectrumLocal, spectrumExternal, sentSuffix)
 		return
 
 	# ==============
@@ -69,8 +70,19 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 
 # Simply shuttle everything from the internal storage to the external storage
 def moveFilesToBackup(imagesLocal, imagesExternal,
-	spectrumLocal, spectrumExternal):
+	spectrumLocal, spectrumExternal, sentSuffix):
+	# Move all the unsent files
 	for file in os.listdir(imagesLocal): 										# Move everything in internal images to USB (inc. sent folder)
-		shutil.move(imagesLocal + file, imagesExternal)
+		if file.endswith('.jpeg'):
+			shutil.move(imagesLocal + file, imagesExternal+file)
 	for file in os.listdir(spectrumLocal): 										# Move everything in internal spectrum to USB (inc. sent folder)
-		shutil.move(spectrumLocal + file, spectrumExternal)
+		if file.endswith('.hdf5'):
+			shutil.move(spectrumLocal + file, spectrumExternal+file)
+
+	# Move all the sent files# Move all the unsent files
+	for file in os.listdir(imagesLocal+sentSuffix): 							# Move everything in internal images to USB (inc. sent folder)
+		if file.endswith('.jpeg'):
+			shutil.move(imagesLocal+sentSuffix + file, imagesExternal+sentSuffix+file)
+	for file in os.listdir(spectrumLocal+sentSuffix): 							# Move everything in internal spectrum to USB (inc. sent folder)
+		if file.endswith('.hdf5'):
+			shutil.move(spectrumLocal+sentSuffix + file, spectrumExternal+sentSuffix+file)
