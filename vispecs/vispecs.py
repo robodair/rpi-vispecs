@@ -18,13 +18,16 @@ def main():
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read("./vispecs/vispecs.cfg")
-    #TODO: if enternet connected, don't run scripts
+
+    network_state = os.system("cat /sys/class/net/eth0/carrier")                # Check if the ethernet is connected, if it is, don't run the scripts
+    if network_state == '1':
+        print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
+        exit(1)
 
     try:                                                                        # This try-except allows the user to prevent the scripts from running
         print "\n===================================================="
         print "Ctrl + C NOW to prevent VISPECS scripts from running"
         print "====================================================\n"
-        time.sleep(1)
         time.sleep(1)
         time.sleep(1)
         time.sleep(1)
@@ -42,7 +45,7 @@ def main():
     extStorage = config.get(STORAGE, 'external')
     moveToExt = False                                                           # Flag whether to move sent files to external Storage
 
-    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")            # Try to mount the USB
+    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")           # Try to mount the USB, writeable by any user
 
     if (os.path.ismount(extStorage)):                                           # If the USB is mounted
         imagePath = imageExt                                                    # Use external storage locations
