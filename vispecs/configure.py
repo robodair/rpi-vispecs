@@ -31,10 +31,15 @@ def main():
     if query_yes_no("Add new Wireless? (iwlan0 must exist)", 'no'):             # Ask to change wifi?
         sys.stdout.write("Enter Wifi SSID: ")
         wifiSSID = raw_input()
-        sys.stdout.write("Enter Wifi key: ")
+        sys.stdout.write("Enter Wifi key (blank for no key): ")
         wifiKey = raw_input()
 
-        os.system("sudo iwconfig wlan0 essid " + wifiSSID + " key '" + wifiKey + "'")
+        if wifiKey != '':
+            wifiKey = "open"
+        else:
+            wifiKey = "'" + wifiKey + "'"
+
+        os.system("sudo iwconfig wlan0 essid " + wifiSSID + " key " + wifiKey)
         config.set('system', 'wifi-ssid', wifiSSID)
         config.set('system', 'wifi-key', wifiKey)
 
