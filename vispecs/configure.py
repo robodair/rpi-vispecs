@@ -9,41 +9,12 @@ import sys, os, ConfigParser, socket, shutil
 
 def main():
 
-    print "Careful here! Don't have much input validation so you should know what you're doing"
+    print "Careful here! Don't have any input validation so you should know what you're doing"
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read("vispecs.cfg")
-    hostname = config.get("system", "system-name")
-    currenthostname = socket.gethostname()
 
-    if query_yes_no("Change System Number? Current: " + currenthostname, 'no'): # Ask to change system number?
-        sys.stdout.write("Enter new number: ")
-        choice = int(raw_input())
-        hostname = hostname + str(choice)
-
-        config.set('system', 'system-number', str(choice))
-
-        os.system("sudo bash -c \'echo " + hostname + " > /etc/hostname\'")     # edit /etc/hostname
-        os.system("sudo bash -c \"perl -pi -e \"s/" + currenthostname + "/"     # edit /etc/hosts
-            + hostname + "/g\" /etc/hosts\"")
-        os.system("sudo /etc/init.d/hostname.sh start")                         # restart hostname service
-
-    if query_yes_no("Add new Wireless? (iwlan0 must exist)", 'no'):             # Ask to change wifi?
-        sys.stdout.write("Enter Wifi SSID: ")
-        wifiSSID = raw_input()
-        sys.stdout.write("Enter Wifi key (blank for no key): ")
-        wifiKey = raw_input()
-
-        if wifiKey != '':
-            wifiKey = "open"
-        else:
-            wifiKey = "'" + wifiKey + "'"
-
-        os.system("sudo iwconfig wlan0 essid " + wifiSSID + " key " + wifiKey)
-        config.set('system', 'wifi-ssid', wifiSSID)
-        config.set('system', 'wifi-key', wifiKey)
-
-    if query_yes_no("Change FTP Details?", 'no'):                               # Ask to change ftp login?
+    if query_yes_no("Change FTP Details?", 'no'):                               # Ask to change ftp login
         sys.stdout.write("Enter FTP server: ")
         server = raw_input()
         sys.stdout.write("Enter FTP username: ")

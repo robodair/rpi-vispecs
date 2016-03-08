@@ -30,26 +30,8 @@ def main():
         os.system("sudo mv /usr/local/lib/libseabreeze.so /usr/lib")            # Move the shared object to the correct lib folder (installs to the wrong one)
         os.system("cd python-seabreeze-python-seabreeze-v0.5.3 && sudo python setup.py install")  # Install python-seabreeze
 
-    hostname = config.get("system", "system-name")                              # Get the desired name from config
-    hostname_number = config.getint("system", "system-number")
-    hostname = hostname + str(hostname_number)
-    if query_yes_no("Set system hostname to " + hostname + "?", 'no'):          # Ask if we should change the system hostname TODO if yes, increment the number
-        currenthostname = socket.gethostname()
-        os.system("sudo bash -c \'echo " + hostname + " > /etc/hostname\'")     # edit /etc/hostname
-        os.system("sudo bash -c \"perl -pi -e \"s/" + currenthostname + "/"     # edit /etc/hosts
-            + hostname + "/g\" /etc/hosts\"")
-        os.system("sudo /etc/init.d/hostname.sh start")                         # restart hostname service
-
-
-    wifiSSID = config.get("system", "wifi-ssid")                                # Get wifi from config
-    wifiKey = config.get("system", "wifi-key")
-    if query_yes_no("Add wifi network: '" + wifiSSID + "' from config file?", 'yes'):
-        os.system("sudo iwconfig wlan0 essid " + wifiSSID + " key '" + wifiKey + "'")
-        #TODO check wlan0 actually exists!
-
-    if query_yes_no("Write kernel modules for RTC then reboot?", 'no'):         # Write RTC kernel modules
+    if query_yes_no("Write kernel modules for RTC?", 'no'):         # Write RTC kernel modules
         os.system('sudo bash -c \'echo -e "i2c-bcm2708\nrtc-ds1374" >> /etc/modules\'')
-        os.system("sudo reboot")
 
     if query_yes_no("Install and configure hardware clock?", 'no'):              # Install and configure the RTC
         os.system("sudo i2cdetect -y 1")
@@ -58,8 +40,7 @@ def main():
         os.system("sudo hwclock -wu")                                           # Write current system time to RTC
 
     flashdriveLocation = config.get("storage", "external")
-    if query_yes_no("Install Vispecs??", 'yes'):
-        # TODO when whole script run as root these commands do not succeed (we want things installed as the pi user)
+    if query_yes_no("Install Vispecs??", 'no'):
         os.system("sudo cp -r ./vispecs ~/vispecs")                             # Copy the vispecs folder to user's home
         os.system("sudo cp ./vispecs/vispecs.sh /etc/profile.d/vispecs.sh")     # Copy our hook to run on startup
         os.system("sudo chmod 755 /etc/profile.d/vispecs.sh")                   # Make sure we can run the shell script
