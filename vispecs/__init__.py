@@ -14,7 +14,7 @@ import os
 STORAGE = 'storage'
 FTP = 'ftp'
 
-def main():
+def go():
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read(os.path.expanduser('~') + "/vispecs.cfg")
@@ -87,5 +87,3 @@ def main():
 def shutdown_pi():                                                              # Method to shutdown the pi
     #os.system("sudo shutdown now")
     print "Would shut down here"
-
-if __name__ == "__main__": main()                                               # Main method (needed for this to run)

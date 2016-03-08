@@ -6,7 +6,7 @@
 import RPi.GPIO as GPIO
 import os, time
 
-if __name__ == "__main__":
+def monitor():
 	GPIO.setmode(GPIO.BCM)
 	GPIO.setup(24, GPIO.IN)
 	GPIO.setup(25, GPIO.OUT)
