@@ -17,7 +17,7 @@ FTP = 'ftp'
 def main():
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
-    config.read("./vispecs/vispecs.cfg")
+    config.read(os.path.expanduser('~') + "/vispecs.cfg")
 
     network_state = os.system("cat /sys/class/net/eth0/carrier")                # Check if the ethernet is connected, if it is, don't run the scripts
     if network_state == '1':
