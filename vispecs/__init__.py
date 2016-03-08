@@ -1,4 +1,4 @@
-# vispecs.py
+# __init__.py
 # author: alisdairrobertson | alisdairrobertson.com
 # ======
 # This is the managing script for the vispecs sensor

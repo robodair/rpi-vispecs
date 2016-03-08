@@ -13,14 +13,15 @@ _IP=$(hostname -I) || true
 _HOSTNAME=$(hostname) || true
 
 if [ "$_IP" ]; then
+  printf "\n%s IP address is %s\n" "$_HOSTNAME" "$_IP"
   printf "\nSetting hardware clock from system time\n"                          # We have a network, set the hwclock from the system time.
   sudo /sbin/hwclock -wu
-  printf "\n%s IP address is %s\n" "$_HOSTNAME" "$_IP"
+
 else
   # No network, set the system time from the hw clock
   printf "\nSetting system time from hardware clock\n"
   sudo /sbin/hwclock -s
 fi
 
-python ~/vispecs/shutdowncheck.py &                                             # Run the script that monitors GPIO for a shutdown signal in the background
+python ~/vispecs/shutdowncheck.py &                                             # TODO make the script work with it being a package. Run the script that monitors GPIO for a shutdown signal in the background
 python ~/vispecs/vispecs.py                                                     # Run the script to perform sensor operations
