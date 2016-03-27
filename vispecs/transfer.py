@@ -7,7 +7,7 @@ import ftplib, os, shutil
 
 def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
     imagesLocal, imagesExternal, spectrumLocal, spectrumExternal,
-    sentSuffix, extIsMounted):
+    sentSuffix, extIsMounted, logging):
 
     # ==============
     # FTP CONNECTION
@@ -25,7 +25,7 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
             print ftpServer + ': ' + rettext
         except Exception as e:
             print "[  VISPECS  ] /incoming directory probably already exists"
-            print ftpServer + ': ' + e
+            print ftpServer + ': ' + repr(e)
 
         rettext = ftp.cwd(ftpDirectory)                                            # Change to the directory
         print ftpServer + ': ' + rettext
@@ -36,8 +36,11 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
     except Exception as e:                                                        # If there was an exception in connecting to the server
 
         print "[  VISPECS  ] Exception on ftp connection. Possibly network is not up:"
-        print e
+        logging.warning("FTP EXCEPTION, network not up?: ")
+        logging.warning(repr(e))
+        print repr(e)
         if extIsMounted:
+            logging.info("Moving files to USB")
             print "[  VISPECS  ] Moving files to USB"
             moveFilesToBackup(imagesLocal, imagesExternal,
                 spectrumLocal, spectrumExternal, sentSuffix)
@@ -61,6 +64,7 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
         for file in os.listdir(dir):                                             # For each file to send in the current directory
             if file.endswith(extension):                                         # Only upload the file type we want
                 try:                                                            # Try to upload the file
+                    logging.info("Attempting upload of:" + dir + file)
                     print "[  VISPECS  ] uploading: " + dir + file                # Let us know what file we're uploading
 
                     upfile = open(dir + file,'rb')                                 # Open file
@@ -72,7 +76,9 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 
                 except ftplib.all_errors as e:
                     print "[  VISPECS  ] File " + file + " not uploaded, error: "
-                    print e    # Print the error if we couldn't upload the file
+                    print repr(e)    # Print the error if we couldn't upload the file
+                    logging.warning("Upload error encountered: ")
+                    logging.warning(repr(e))
                     return False
 
     rettext = ftp.quit()                                                        # Close our connection to the server

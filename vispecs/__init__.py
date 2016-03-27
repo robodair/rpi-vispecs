@@ -10,11 +10,15 @@ import ConfigParser
 import sense, transfer
 import subprocess
 import os
+import logging # so we can see what's going on
 
 STORAGE = 'storage'
 FTP = 'ftp'
 
 def go():
+
+    logFileName = sense.getFileName();
+    logging.basicConfig(filename= str(logFileName + ".log"),level=logging.DEBUG)
 
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read(os.path.expanduser('~') + "/vispecs.cfg")
@@ -52,6 +56,7 @@ def go():
     os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")           # Try to mount the USB, writeable by any user
 
     if (os.path.ismount(extStorage)):                                           # If the USB is mounted
+        logging.info("USB Was mounted")
         imagePath = imageExt                                                    # Use external storage locations
         spectrumPath = spectrumExt
         moveToExt = True                                                        # Flag to move sent files to backup
@@ -60,9 +65,10 @@ def go():
             os.makedirs(imageExt + sentSuffix)
         if not os.path.exists(spectrumExt + sentSuffix):
             os.makedirs(spectrumExt + sentSuffix)
-        print "dirs are"+ imagePath + spectrumPath
+        logging.info("created USB dirs are: "+ imagePath + spectrumPath)
 
     else:                                                                       # Otherwise use internal storage locations
+        logging.info("No USB, Falling back to internal storage")
         imagePath = imageLocal
         spectrumPath = spectrumLocal
 
@@ -71,19 +77,21 @@ def go():
     if not os.path.exists(spectrumLocal + sentSuffix):
         os.makedirs(spectrumLocal + sentSuffix)
 
-    sense.takePhoto(imagePath)                                                  # Run all of the components of the sensor
-    sense.readSpectrum(spectrumPath)                                            # Passing the config options
+    sense.takePhoto(imagePath)                                         # Run all of the components of the sensor
+    sense.readSpectrum(spectrumPath)                                   # Passing the config options
 
-    ftpServer = config.get(FTP, 'ftp-server')                                   # Get the info for the FTP
+    ftpServer = config.get(FTP, 'ftp-server')                                   # Get the info for the FTP, username & pass not actually used
     ftpUser = config.get(FTP, 'ftp-username')
     ftpPass = config.get(FTP, 'ftp-password')
     ftpDirectory = config.get(FTP, 'ftp-directory')
 
     transfer.make(ftpServer, ftpUser, ftpPass, ftpDirectory,
-        imageLocal, imageExt, spectrumLocal, spectrumExt, sentSuffix, moveToExt)
+        imageLocal, imageExt, spectrumLocal, spectrumExt, sentSuffix, moveToExt, logging)
 
     print "[  VISPECS  ] Scripts complete, shutting down."
+    logging.info("Issuing shutdown command")
     shutdown_pi()
 
 def shutdown_pi():                                                              # Method to shutdown the pi
+    print "shutdown"
     os.system("sudo shutdown now")
