@@ -7,7 +7,7 @@ import ftplib, os, shutil
 
 def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
     imagesLocal, imagesExternal, spectrumLocal, spectrumExternal,
-    sentSuffix, moveToExt):
+    sentSuffix, extIsMounted):
 
     # ==============
     # FTP CONNECTION
@@ -25,7 +25,7 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
             print ftpServer + ': ' + rettext
         except Exception as e:
             print "[  VISPECS  ] /incoming directory probably already exists"
-            print e
+            print ftpServer + ': ' + e
 
         rettext = ftp.cwd(ftpDirectory)                                            # Change to the directory
         print ftpServer + ': ' + rettext
@@ -35,9 +35,9 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 
     except Exception as e:                                                        # If there was an exception in connecting to the server
 
-        print "[  VISPECS  ] Exception on ftp connection."
+        print "[  VISPECS  ] Exception on ftp connection. Possibly network is not up:"
         print e
-        if moveToExt:
+        if extIsMounted:
             print "[  VISPECS  ] Moving files to USB"
             moveFilesToBackup(imagesLocal, imagesExternal,
                 spectrumLocal, spectrumExternal, sentSuffix)
@@ -49,6 +49,12 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 
     for dir in (imagesLocal, spectrumLocal, imagesExternal, spectrumExternal):    # For every directory that contains files to send
         extension = '.hdf5'                                                        # Variable to specify file extension
+
+        if dir in (imagesExternal, spectrumExternal):                            # Check if the external directories actually exist.
+            if not extIsMounted:                                                 # If external isn't mounted, skip it
+                continue
+
+
         if dir in (imagesLocal, imagesExternal):
             extension = '.jpeg'                                                    # Change extension if we're dealing with the image directories
 
@@ -65,7 +71,7 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
                     shutil.move(dir + file, dir + sentSuffix + file)            # Move to a sent directory where it was
 
                 except ftplib.all_errors as e:
-                    print "[  VISPECS  ] File " + file + "not uploaded, error: "
+                    print "[  VISPECS  ] File " + file + " not uploaded, error: "
                     print e    # Print the error if we couldn't upload the file
                     return False
 
@@ -77,7 +83,6 @@ def make(ftpServer, ftpUser, ftpPass, ftpDirectory,
 # Simply shuttle everything from the internal storage to the external storage
 def moveFilesToBackup(imagesLocal, imagesExternal,
     spectrumLocal, spectrumExternal, sentSuffix):
-    # Move all the unsent files
     for file in os.listdir(imagesLocal):                                         # Move everything in internal images to USB (inc. sent folder)
         if file.endswith('.jpeg'):
             shutil.move(imagesLocal + file, imagesExternal+file)
@@ -85,7 +90,6 @@ def moveFilesToBackup(imagesLocal, imagesExternal,
         if file.endswith('.hdf5'):
             shutil.move(spectrumLocal + file, spectrumExternal+file)
 
-    # Move all the sent files# Move all the unsent files
     for file in os.listdir(imagesLocal+sentSuffix):                             # Move everything in internal images to USB (inc. sent folder)
         if file.endswith('.jpeg'):
             shutil.move(imagesLocal+sentSuffix + file, imagesExternal+sentSuffix+file)

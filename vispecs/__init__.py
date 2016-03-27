@@ -19,8 +19,12 @@ def go():
     config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
     config.read(os.path.expanduser('~') + "/vispecs.cfg")
 
-    network_state = os.system("cat /sys/class/net/eth0/carrier")                # Check if the ethernet is connected, if it is, don't run the scripts
-    if network_state == '1':
+    from subprocess import Popen, PIPE
+
+    (stdout, stderr) = Popen(["cat","/sys/class/net/eth0/carrier"], stdout=PIPE).communicate() # Check if the ethernet is connected
+    network_state = stdout
+    print "[  VISPECS  ] eth0 Network State: " + network_state
+    if int(network_state) == 1:
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
         exit(1)
 
@@ -82,5 +86,4 @@ def go():
     shutdown_pi()
 
 def shutdown_pi():                                                              # Method to shutdown the pi
-    #os.system("sudo shutdown now")
-    print "Would shut down here"
+    os.system("sudo shutdown now")
