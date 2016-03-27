@@ -5,34 +5,42 @@
 # It calls the various classes to complete the sensor operations
 # It also manages the reading of the configuration file so that
 # we don't need to re-pars the file for each class
+
+# Imports
 import time, shutil
 import ConfigParser
-import sense, transfer
 import subprocess
 import os
-import logging # so we can see what's going on
+import logging
+from subprocess import Popen, PIPE
 
+# This package Imports
+import sense
+import transfer
+
+# Constants
 STORAGE = 'storage'
 FTP = 'ftp'
 
 def go():
 
+    #Initialise Logging
     logFileName = sense.getFileName();
     logging.basicConfig(filename= str(logFileName + ".log"),level=logging.DEBUG)
 
-    config = ConfigParser.SafeConfigParser()                                    # Parse the configuration file
+    # Parse the configuration file
+    config = ConfigParser.SafeConfigParser()
     config.read(os.path.expanduser('~') + "/vispecs.cfg")
 
-    from subprocess import Popen, PIPE
-
-    (stdout, stderr) = Popen(["cat","/sys/class/net/eth0/carrier"], stdout=PIPE).communicate() # Check if the ethernet is connected
-    network_state = stdout
+     # If ethernet is connected don't run the scripts
+    (network_state, stderr) = Popen(["cat","/sys/class/net/eth0/carrier"], stdout=PIPE).communicate()
     print "[  VISPECS  ] eth0 Network State: " + network_state
     if int(network_state) == 1:
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
         exit(1)
 
-    try:                                                                        # This try-except allows the user to prevent the scripts from running
+    # If ethernet is not up, give the user a brief change to cancel execution
+    try:
         print "\n===================================================="
         print "Ctrl + C NOW to prevent VISPECS scripts from running"
         print "====================================================\n"
@@ -41,52 +49,65 @@ def go():
         time.sleep(1)
     except KeyboardInterrupt:
         print "[  VISPECS  ] Execution cancelled\n"
-        exit(1)                                                                 # exit non-0 because this wasn't a "success"
+        exit(1)
 
+    # Begin execution of sensor scripts
     print "[  VISPECS  ] Running scripts\n"
 
-    imageExt = config.get(STORAGE, 'image-external')                            # Get & maybe make all Storage locations
+    # Get info about storing files
+    imageExt = config.get(STORAGE, 'image-external')
     spectrumExt = config.get(STORAGE, 'spectrum-external')
     imageLocal = config.get(STORAGE, 'image-local')
     spectrumLocal = config.get(STORAGE, 'spectrum-local')
     sentSuffix = config.get(STORAGE, 'sent-dir')
     extStorage = config.get(STORAGE, 'external')
-    moveToExt = False                                                           # Flag whether to move sent files to external Storage
+     # Flag whether to move sent files to external Storage
+    moveToExt = False
 
-    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")           # Try to mount the USB, writeable by any user
+    # Try to mount the USB flashdrive, writeable by any user
+    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")
 
-    if (os.path.ismount(extStorage)):                                           # If the USB is mounted
+    # Make sure we use the USB if it is mounted
+    if (os.path.ismount(extStorage)):
         logging.info("USB Was mounted")
-        imagePath = imageExt                                                    # Use external storage locations
+        imagePath = imageExt
         spectrumPath = spectrumExt
-        moveToExt = True                                                        # Flag to move sent files to backup
+        moveToExt = True
 
-        if not os.path.exists(imageExt + sentSuffix):                           # If USB is mounted, make sure directories exist
+        # If USB is mounted, make sure directories exist
+        if not os.path.exists(imageExt + sentSuffix):
             os.makedirs(imageExt + sentSuffix)
         if not os.path.exists(spectrumExt + sentSuffix):
             os.makedirs(spectrumExt + sentSuffix)
         logging.info("created USB dirs are: "+ imagePath + spectrumPath)
 
-    else:                                                                       # Otherwise use internal storage locations
+    # Otherwise use internal storage locations
+    else:
         logging.info("No USB, Falling back to internal storage")
         imagePath = imageLocal
         spectrumPath = spectrumLocal
 
-    if not os.path.exists(imageLocal + sentSuffix):                             # Make sure that local directories exist
+    # Make sure that local directories exist
+    if not os.path.exists(imageLocal + sentSuffix):
         os.makedirs(imageLocal + sentSuffix)
     if not os.path.exists(spectrumLocal + sentSuffix):
         os.makedirs(spectrumLocal + sentSuffix)
 
-    sense.takePhoto(imagePath)                                         # Run all of the components of the sensor
-    sense.readSpectrum(spectrumPath)                                   # Passing the config options
+    # Take photograph & reading
+    sense.takePhoto(imagePath, logging)
+    sense.readSpectrum(spectrumPath, logging)
 
-    ftpServer = config.get(FTP, 'ftp-server')                                   # Get the info for the FTP, username & pass not actually used
+    # Get the FTP info
+    ftpServer = config.get(FTP, 'ftp-server')
+    ftpLogServer = config.get(FTP, 'ftp-log-server')
     ftpUser = config.get(FTP, 'ftp-username')
     ftpPass = config.get(FTP, 'ftp-password')
     ftpDirectory = config.get(FTP, 'ftp-directory')
 
+    # Make the FTP transfer
     transfer.make(ftpServer, ftpUser, ftpPass, ftpDirectory,
-        imageLocal, imageExt, spectrumLocal, spectrumExt, sentSuffix, moveToExt, logging)
+        imageLocal, imageExt, spectrumLocal, spectrumExt,
+        sentSuffix, moveToExt, logging, ftpLogServer)
 
     print "[  VISPECS  ] Scripts complete, shutting down."
     logging.info("Issuing shutdown command")
