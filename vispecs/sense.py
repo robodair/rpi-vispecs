@@ -15,7 +15,7 @@ import seabreeze.spectrometers as sb
 # Define Constants
 IMAGE_FORMAT = '.jpeg'
 SPECTRUM_FORMAT = '.hdf5'
-DATETIME = datetime.datetime.utcnow().strftime("UTC_%d-%m-%y_%H.%M.%S")
+DATETIME = datetime.datetime.utcnow().strftime("UTC_%y-%m-%d_%H.%M.%S")
 PI_NAME = socket.gethostname()
 
 # Define the time and date as name of the file

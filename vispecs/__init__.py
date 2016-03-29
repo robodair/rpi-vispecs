@@ -32,6 +32,19 @@ def go():
     config = ConfigParser.SafeConfigParser()
     config.read(os.path.expanduser('~') + "/vispecs.cfg")
 
+    # Get info about storing files
+    imageExt = config.get(STORAGE, 'image-external')
+    spectrumExt = config.get(STORAGE, 'spectrum-external')
+    imageLocal = config.get(STORAGE, 'image-local')
+    spectrumLocal = config.get(STORAGE, 'spectrum-local')
+    sentSuffix = config.get(STORAGE, 'sent-dir')
+    extStorage = config.get(STORAGE, 'external')
+     # Flag whether to move sent files to external Storage
+    moveToExt = False
+
+    # Try to mount the USB flashdrive, writeable by any user
+    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")
+
      # If ethernet is connected don't run the scripts
     (network_state, stderr) = Popen(["cat","/sys/class/net/eth0/carrier"], stdout=PIPE).communicate()
     print "[  VISPECS  ] eth0 Network State: " + network_state
@@ -53,19 +66,6 @@ def go():
 
     # Begin execution of sensor scripts
     print "[  VISPECS  ] Running scripts\n"
-
-    # Get info about storing files
-    imageExt = config.get(STORAGE, 'image-external')
-    spectrumExt = config.get(STORAGE, 'spectrum-external')
-    imageLocal = config.get(STORAGE, 'image-local')
-    spectrumLocal = config.get(STORAGE, 'spectrum-local')
-    sentSuffix = config.get(STORAGE, 'sent-dir')
-    extStorage = config.get(STORAGE, 'external')
-     # Flag whether to move sent files to external Storage
-    moveToExt = False
-
-    # Try to mount the USB flashdrive, writeable by any user
-    os.system("sudo mount /dev/sda1 " + extStorage + " -o umask=000")
 
     # Make sure we use the USB if it is mounted
     if (os.path.ismount(extStorage)):
@@ -113,6 +113,6 @@ def go():
     logging.info("Issuing shutdown command")
     shutdown_pi()
 
-def shutdown_pi():                                                              # Method to shutdown the pi
-    print "shutdown"
+def shutdown_pi():
+    print "shutdown command reached"
     os.system("sudo shutdown now")
