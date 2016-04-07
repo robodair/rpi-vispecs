@@ -12,6 +12,7 @@ import ConfigParser
 import subprocess
 import os
 import logging
+import socket
 from subprocess import Popen, PIPE
 
 # This package Imports
@@ -25,8 +26,10 @@ FTP = 'ftp'
 def go():
 
     #Initialise Logging
-    logFileName = sense.getFileName();
+    logFileName = socket.gethostname();
     logging.basicConfig(filename= str(logFileName + ".log"),level=logging.DEBUG)
+    # Log the date/time of the log
+    logging.info("+++++++ NEW WAKEUP: " + sense.getFileName())
 
     # Parse the configuration file
     config = ConfigParser.SafeConfigParser()
