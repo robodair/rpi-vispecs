@@ -45,7 +45,7 @@ void alarm_isr()
 
 void setup()
 { 
-  tmElements_t currentTime;       // Reference to hold the current time
+  
 
   pinMode(LED_PIN, OUTPUT);       // Configure "Standard" LED pin
   digitalWrite(LED_PIN,LOW);      // Switch on LED when we run setup
@@ -57,9 +57,6 @@ void setup()
 
   // We do not set the time on the RTC because we don't want to muck up the time when we restart the arduino
   // The correct time will be set by the rpi while we have a power bypass installed (remember to set it as UTC, the RTC is only in UTC)
-
-  SleepyPi.readTime(currentTime); // Get the current time off the RTC
-  setNoonAlarm(currentTime);      // Set an alarm for the next noon
 
 //  Serial.begin(9600);                                                   // Initialise Serial comms
 //  Serial.print("setup() | RTC Time: "); printTime(currentTime,true);    // Send the time to the serial (for debugging)
@@ -75,6 +72,9 @@ void loop()
     unsigned long timeNowMs, timeStartMs;
     tmElements_t  currentTime; 
     bool pi_running;
+
+    SleepyPi.readTime(currentTime); // Get the current time off the RTC
+    setNoonAlarm(currentTime);      // Set an alarm for the next noon
   
     
     attachInterrupt(0, alarm_isr, FALLING);		// Allow wake up alarm to trigger interrupt on falling edge.
