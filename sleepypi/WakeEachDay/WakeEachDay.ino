@@ -85,6 +85,8 @@ void alarm_isr()
 
 void setup()
 {  
+  // As soon as the reste button is pressed, set an alarm for 24hrs
+  setAlarm();
   // Configure "Standard" LED pin
   pinMode(LED_PIN, OUTPUT);		
   digitalWrite(LED_PIN,LOW);		// Switch off LED
@@ -120,8 +122,6 @@ void loop()
     unsigned long timeNowMs, timeStartMs;
     tmElements_t  currentTime; 
     bool pi_running;
-
-    setAlarm();
   
     // Allow wake up alarm to trigger interrupt on falling edge.
     attachInterrupt(0, alarm_isr, FALLING);		// Alarm pin
@@ -130,6 +130,9 @@ void loop()
     // Enter power down state with ADC and BOD module disabled.
     // Wake up when wake up pin is low.
     SleepyPi.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF); 
+
+    // Sleepy Pi has just woken up here - set a new alarm for 24 Hrs
+    setAlarm();
     
     // Disable external pin interrupt on wake up pin.
     detachInterrupt(0); 
