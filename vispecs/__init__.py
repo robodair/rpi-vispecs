@@ -37,7 +37,7 @@ def vispecs_go():
     logging.basicConfig(filename=str(log_file_name),
                         level=logging.DEBUG)
     # Log the date/time of the log
-    logging.info("\n\n+++++++ NEW WAKEUP: " + sense.get_file_name())
+    logging.info("+++++++ NEW WAKEUP: " + sense.get_file_name())
 
     # Parse the configuration file
     config = ConfigParser.SafeConfigParser()
@@ -118,7 +118,7 @@ def vispecs_go():
                   (ext_storage, ext_mounted), logging)
 
     print "[  VISPECS  ] Scripts complete, shutting down."
-    logging.info("Issuing shutdown command")
+    logging.info("Issuing shutdown command\n\n\n")
     # Copy the log file to the usb (force so we can overwrite)
     if ext_mounted:
         os.system("cp -f " + os.path.expanduser('~') + "/" + log_file_name
