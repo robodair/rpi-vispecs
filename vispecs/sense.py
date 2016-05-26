@@ -1,15 +1,16 @@
 # sense.py
-# author: alisdairrobertson | alisdairrobertson.com
-# ======
-# This script performs taking of photographs using the picamera &
-# reading of wavelength intensity data from the USB spectrometer
+"""
+    author: alisdairrobertson | alisdairrobertson.com
+    ======
+    This script performs taking of photographs using the picamera &
+    reading of wavelength intensity data from the USB spectrometer
+"""
 
 import time
 import picamera
 import datetime
 import socket
 import h5py
-import numpy
 import seabreeze.spectrometers as sb
 
 # Define Constants
@@ -20,14 +21,16 @@ PI_NAME = socket.gethostname()
 
 # Define the time and date as name of the file
 # The format is [pi name]__[day]-[month]-[year]_[hour].[min].[sec].jpeg
-def getFileName():
+def get_file_name():
+    """REturn the name we should use fro files, system name and the datetime"""
     return PI_NAME + "_" + DATETIME
 
 # Take a photo with the PiCamera
-def takePhoto(imagePath, logging):
+def take_photo(path, logging):
+    """Take a photo with the infrared cam and store it in the local dir"""
     print "[  VISPECS  ] Taking a photo"
     try:
-        fileName = getFileName()
+        file_name = get_file_name()
 
         camera = picamera.PiCamera()
         camera.exposure_mode = 'auto'
@@ -38,19 +41,20 @@ def takePhoto(imagePath, logging):
         # Begin preview then sleep to let the camera adjust
         camera.start_preview()
         time.sleep(3)
-        camera.capture(imagePath + fileName + IMAGE_FORMAT)
+        camera.capture(path + file_name + IMAGE_FORMAT)
         camera.stop_preview()
 
-        print "[  VISPECS  ] Image file: " + imagePath + fileName + IMAGE_FORMAT
-        logging.info("Image file taken: " + imagePath + fileName + IMAGE_FORMAT)
+        print "[  VISPECS  ] Image file: " + path + file_name + IMAGE_FORMAT
+        logging.info("Image file taken: " + path + file_name + IMAGE_FORMAT)
 
-    except Exception as e:
+    except Exception as error:
         print "[  VISPECS EXCEPTION!  ] Exception when taking image!"
-        print e
-        logging.info("Image Exception!: " + repr(e))
+        print error
+        logging.info("Image Exception!: " + repr(error))
 
-def readSpectrum(spectrumPath, logging):
-    fileName = getFileName()
+def sample_spectrum(path, logging):
+    """Sample the spectrum and store the file locally"""
+    file_name = get_file_name()
 
     try:
         # Get the Spectrometer
@@ -63,25 +67,27 @@ def readSpectrum(spectrumPath, logging):
         intensities = spec.intensities()
 
         # Storing in hdf5
-        spectFile = h5py.File(spectrumPath + fileName + SPECTRUM_FORMAT, "w")
-        spectGrp = spectFile.create_group("grp_spectrum")
+        spect_file = h5py.File(path + file_name + SPECTRUM_FORMAT, "w")
+        spect_grp = spect_file.create_group("grp_spectrum")
         # Store the pi/system name as an attribute of this group
-        spectGrp.attrs.__setitem__('attr_system', PI_NAME)
+        spect_grp.attrs.__setitem__('attr_system', PI_NAME)
         # Store the utc datetime as an attribute of this group
-        spectGrp.attrs.__setitem__('attr_datetime', DATETIME)
+        spect_grp.attrs.__setitem__('attr_datetime', DATETIME)
 
         # Dataset for storing the wavelengths
-        wavelengthsDset = spectGrp.create_dataset("dataset_wavelengths", data=wavelengths)
+        wavelength_dataset = spect_grp.create_dataset("dataset_wavelengths",
+                                                      data=wavelengths)
         # Dataset for storing the intensities
-        intensitiesDset = spectGrp.create_dataset("dataset_intensities", data=intensities)
+        intensities_dataset = spect_grp.create_dataset("dataset_intensities",
+                                                       data=intensities)
 
         # Close the spectrum file
-        spectFile.close()
+        spect_file.close()
 
-        print "[  VISPECS  ] Spectrum file: " + spectrumPath + fileName + SPECTRUM_FORMAT
-        logging.info("Spectrum file: " + spectrumPath + fileName + SPECTRUM_FORMAT)
+        print "[  VISPECS  ] Spectrum file: " + path + file_name + SPECTRUM_FORMAT
+        logging.info("Spectrum file: " + path + file_name + SPECTRUM_FORMAT)
 
-    except Exception as e:
+    except Exception as error:
         print "[  VISPECS  ] Exception when reading spectrum!"
-        print e
-        logging.info("Spectrum Exception!: " + repr(e))
+        print error
+        logging.info("Spectrum Exception!: " + repr(error))
