@@ -17,15 +17,15 @@ if [ "$_IP" ]; then
   # We have a network, set the hwclock from the system time.
   printf "\n%s IP address is %s\n" "$_HOSTNAME" "$_IP"
   printf "\nSetting hardware clock from system time\n"
-  sudo /sbin/hwclock -wu
+  sudo hwclock -wu
 
 else
   # No network, set the system time from the hw clock
   printf "\nSetting system time from hardware clock\n"
-  sudo /sbin/hwclock -s
+  sudo hwclock -s
 fi
 
  # Run the script that monitors GPIO for a shutdown signal in the background
 python -c 'import vispecs.shutdowncheck as vs; vs.monitor()' &
 # Run the script to perform sensor operations
-python -c 'import vispecs as v; v.go()'
+python -c 'import vispecs as v; v.vispecs_go()'
