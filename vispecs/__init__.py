@@ -119,9 +119,9 @@ def vispecs_go():
 
     print "[  VISPECS  ] Scripts complete, shutting down."
     logging.info("Issuing shutdown command")
-    # Copy the log file to the usb
+    # Copy the log file to the usb (force so we can overwrite)
     if ext_mounted:
-        os.system("cp " + os.path.expanduser('~') + "/" + log_file_name
+        os.system("cp -f " + os.path.expanduser('~') + "/" + log_file_name
                   + " " + ext_storage)
     shutdown_pi()
 
