@@ -62,6 +62,7 @@ def vispecs_go():
     logging.info("eth0 Network State: " + network_state)
 
     if int(network_state) == 1:
+        logging.info("Ethernet Present, maintenence Execution cancelled")
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
         exit(1)
 
