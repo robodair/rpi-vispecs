@@ -33,8 +33,8 @@ def vispecs_go():
     """ Run all of the Vispecs Components"""
 
     #Initialise Logging
-    log_file_name = socket.gethostname()
-    logging.basicConfig(filename=str(log_file_name + ".log"),
+    log_file_name = socket.gethostname() + ".log"
+    logging.basicConfig(filename=str(log_file_name),
                         level=logging.DEBUG)
     # Log the date/time of the log
     logging.info("+++++++ NEW WAKEUP: " + sense.get_file_name())
@@ -115,6 +115,9 @@ def vispecs_go():
 
     print "[  VISPECS  ] Scripts complete, shutting down."
     logging.info("Issuing shutdown command")
+    # Copy the log file to the usb
+    if ext_mounted:
+        os.system("cp" + log_file_name + " " + ext_storage)
     shutdown_pi()
 
 def shutdown_pi():
