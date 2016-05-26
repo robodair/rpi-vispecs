@@ -18,8 +18,7 @@ def make(ftp_server, ftp_directory, local_dirs, external_status, logging):
     # If the usb is mounted
     if external_status[1]:
         # Copy recursive, no overwrite, preserving metadata from local to ext
-        # needs sudo to preserve permissions
-        os.system("sudo cp -R -n -p " + local_dirs[1] + " " + external_status[0])
+        os.system("sudo cp -R -n " + local_dirs[1] + " " + external_status[0])
 
     # ==============
     # FTP CONNECTION
