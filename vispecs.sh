@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 # vispecs.sh
 # author: alisdairrobertson | alisdairrobertson.com
 # Simple shell script for placement in /etc/profile.d/ for vispecs
