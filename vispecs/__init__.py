@@ -128,4 +128,4 @@ def vispecs_go():
 def shutdown_pi():
     """ Completely shutdown the pi, which means the sleepypi will kill power """
     print "shutdown command reached"
-    #os.system("sudo shutdown now")
+    os.system("sudo shutdown now")
