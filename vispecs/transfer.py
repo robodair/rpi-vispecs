@@ -70,7 +70,7 @@ def make(ftp_server, ftp_directory, local_dirs, external_status, logging):
             upfile.close()
 
             # move s_file to ~/vispecs_data/sent
-            os.system("mv " + local_dirs[1] + s_file + " " + local_dirs[2])
+            os.system("sudo mv " + local_dirs[1] + s_file + " " + local_dirs[2])
 
         except ftplib.all_errors as error:
             print "[  VISPECS  ] File " + s_file + " not uploaded, error: "
