@@ -46,7 +46,7 @@ def vispecs_go():
     # Get info about storing files
     local_dir = os.path.expanduser('~') + '/vispecs_data/'
     local_drop = local_dir + 'captured/'
-    sent_dir = local_dir + config.get(STORAGE, 'sent-dir')
+    sent_dir = local_dir + 'sent/'
     ext_storage = config.get(STORAGE, 'external')
     # Flag whether external is mounted
     ext_mounted = False
@@ -65,6 +65,9 @@ def vispecs_go():
         logging.info("Ethernet Present, maintenence Execution cancelled")
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
         exit(1)
+
+     # Run the script that monitors GPIO for a shutdown signal in the background
+    os.system("python -c 'import vispecs.shutdowncheck as vs; vs.monitor()' &")
 
     # If ethernet is not up, give the user a brief change to cancel execution
     try:
@@ -95,8 +98,8 @@ def vispecs_go():
         os.makedirs(local_dir)
     if not os.path.exists(local_drop):
         os.makedirs(local_drop)
-    if not os.path.exists(local_dir + sent_dir):
-        os.makedirs(local_dir + sent_dir)
+    if not os.path.exists(sent_dir):
+        os.makedirs(sent_dir)
 
     # Take photograph & reading
     sense.take_photo(local_drop, logging)

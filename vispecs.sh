@@ -25,7 +25,5 @@ else
   sudo hwclock -s
 fi
 
- # Run the script that monitors GPIO for a shutdown signal in the background
-python -c 'import vispecs.shutdowncheck as vs; vs.monitor()' &
 # Run the script to perform sensor operations
 python -c 'import vispecs as v; v.vispecs_go()'

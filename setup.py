@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='vispecs',
-      version='1.0.0.dev6',
+      version='1.0.0.dev7',
       description='Python package for rainforest spectrum sensors',
       long_description=open('README.md').read(),
       url='https://github.com/alisdairrobertson/rpi-vispecs',
