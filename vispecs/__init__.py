@@ -59,7 +59,7 @@ def vispecs_go():
                                     stdout=PIPE).communicate()
 
     print "[  VISPECS  ] eth0 Network State: " + network_state
-    logging.info("eth0 Network State: " + network_state + " Stderr: " + stderr)
+    logging.info("eth0 Network State: " + network_state)
 
     if int(network_state) == 1:
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
