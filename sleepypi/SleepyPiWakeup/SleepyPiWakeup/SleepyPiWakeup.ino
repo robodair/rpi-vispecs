@@ -56,6 +56,7 @@ void setup()
   
   // Set the alarm for next UTC 2AM (Australian solar noon) then sleep
   SleepyPi.enableWakeupAlarm();
+  SleepyPi.ackAlarm();
   setUTC2amAlarm();
   attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
    // Allow wake up triggered by button press
@@ -70,6 +71,12 @@ void loop()
   
     // Allow wake up alarm to trigger interrupt on falling edge.
     attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
+    if (buttonPressed){
+      // Reset alarm & button variable if button was pressed
+      buttonPressed = false;
+      SleepyPi.ackAlarm();
+      setUTC2amAlarm();
+    }
     
     // +++++++++ Test +++++++++++++
     SleepyPi.readTime(currentTime);
@@ -84,11 +91,6 @@ void loop()
     
     // Enter power down state with ADC and BOD module disabled.
     // Wake up when wake up pin is low.
-    if (buttonPressed){
-      // Reset alarm & button variable if button was pressed
-      buttonPressed = false;
-      setUTC2amAlarm();
-    }
     SleepyPi.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF); 
     
     // Disable external pin interrupt on wake up pin.
