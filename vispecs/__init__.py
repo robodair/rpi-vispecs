@@ -24,6 +24,7 @@ from subprocess import Popen
 # This package Imports
 import sense
 import transfer
+import shutdowncheck
 
 # Constants
 STORAGE = 'storage'
@@ -64,6 +65,11 @@ def vispecs_go():
     if int(network_state) == 1:
         logging.info("Ethernet Present, maintenence Execution cancelled")
         print "[  VISPECS  ] Execution cancelled, Ethernet connection detected\n"
+        exit(1)
+
+    if shutdowncheck.is_maintenence_mode():
+        logging.info("Maintenence mode pin HIGH, Execution cancelled")
+        print "[  VISPECS  ] Execution cancelled, Maintenence mode pin HIGH\n"
         exit(1)
 
      # Run the script that monitors GPIO for a shutdown signal in the background

@@ -36,13 +36,15 @@ void button_isr()
 {
     // A handler for the Button interrupt.
     buttonPressed = true;
+    delay(500);
 }
 
 void setup()
 { 
+  pinMode(17, OUTPUT); // set maintenence pin
   // Configure "Standard" LED pin
   pinMode(LED_PIN, OUTPUT);		
-  digitalWrite(LED_PIN,LOW);		// Switch off LED
+  //digitalWrite(LED_PIN,LOW);		// Switch off LED
 
   SleepyPi.enablePiPower(false); 
   SleepyPi.enableExtPower(false);
@@ -71,7 +73,7 @@ void loop()
   
     // Allow wake up alarm to trigger interrupt on falling edge.
     attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
-    if (buttonPressed){
+    if (buttonPressed) {
       // Reset alarm & button variable if button was pressed
       buttonPressed = false;
       SleepyPi.ackAlarm();
@@ -103,6 +105,12 @@ void loop()
     Serial.print("\n\nI've Just woken up: ");
     SleepyPi.readTime(currentTime);
     printTime(currentTime,false); 
+
+    if (buttonPressed){
+      delay(1000);
+      Serial.println("Set Maintenence Pin High");
+      digitalWrite(17,HIGH);    // Set pin high to tell Pi that we are in maintenence
+    }
     
     // The RPi is now awake. Wait for it to shutdown or
     // Force it off after a set timeout.  

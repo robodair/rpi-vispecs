@@ -25,3 +25,13 @@ def monitor():
             os.system("sudo shutdown -h now")
             break
         time.sleep(0.5)
+
+def is_maintenence_mode():
+    """checks to see if we are recieving a signal that we are in
+    maintenence mode """
+    GPIO.setup(24, GPIO.IN)
+    # If pin 24 is ALREADY high, the arduino is telling us that code shouldn't
+    # Be allowed to start
+    if GPIO.input(24):
+        return True
+    return False
