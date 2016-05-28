@@ -10,7 +10,7 @@
 #include <DS1374RTC.h>
 #include <Wire.h>
 
-#define RPI_POWER_TIMEOUT_MS     30000//0    // in ms - so this is 5 minutes
+#define RPI_POWER_TIMEOUT_MS     300000    // in ms - so this is 5 minutes
 #define TIME_INTERVAL_SECONDS    0
 #define TIME_INTERVAL_MINUTES    0   
 #define TIME_INTERVAL_HOURS      24
