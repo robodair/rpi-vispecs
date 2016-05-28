@@ -29,6 +29,7 @@ def monitor():
 def is_maintenence_mode():
     """checks to see if we are recieving a signal that we are in
     maintenence mode """
+    GPIO.setmode(GPIO.BCM)
     GPIO.setup(24, GPIO.IN)
     # If pin 24 is ALREADY high, the arduino is telling us that code shouldn't
     # Be allowed to start
