@@ -10,13 +10,14 @@
 #include <DS1374RTC.h>
 #include <Wire.h>
 
-#define RPI_POWER_TIMEOUT_MS     300000    // in ms - so this is 5 minutes
+#define RPI_POWER_TIMEOUT_MS     30000//0    // in ms - so this is 5 minutes
 #define TIME_INTERVAL_SECONDS    0
 #define TIME_INTERVAL_MINUTES    0   
 #define TIME_INTERVAL_HOURS      24
 #define TIME_INTERVAL_DAYS       0
 
 tmElements_t powerUpTime;
+volatile bool  buttonPressed = false;
 
 const int LED_PIN = 13;
 const char *monthName[12] = {
@@ -29,6 +30,12 @@ void alarm_isr()
     // Just a handler for the alarm interrupt.
     // You could do something here
 
+}
+
+void button_isr()
+{
+    // A handler for the Button interrupt.
+    buttonPressed = true;
 }
 
 void setup()
@@ -51,6 +58,8 @@ void setup()
   SleepyPi.enableWakeupAlarm();
   setUTC2amAlarm();
   attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
+   // Allow wake up triggered by button press
+  attachInterrupt(1, button_isr, LOW);    // button pin 
 }
 
 void loop() 
@@ -75,6 +84,11 @@ void loop()
     
     // Enter power down state with ADC and BOD module disabled.
     // Wake up when wake up pin is low.
+    if (buttonPressed){
+      // Reset alarm & button variable if button was pressed
+      buttonPressed = false;
+      setUTC2amAlarm();
+    }
     SleepyPi.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF); 
     
     // Disable external pin interrupt on wake up pin.
@@ -83,7 +97,7 @@ void loop()
     SleepyPi.ackAlarm();
     SleepyPi.setAlarm(powerUpTime); 
     
-    //SleepyPi.enablePiPower(true);   
+    SleepyPi.enablePiPower(true);   
     Serial.print("\n\nI've Just woken up: ");
     SleepyPi.readTime(currentTime);
     printTime(currentTime,false); 
@@ -91,29 +105,56 @@ void loop()
     // The RPi is now awake. Wait for it to shutdown or
     // Force it off after a set timeout.  
     timeStartMs = timeNowMs = millis();
+    // Wait for pi to boot
     while ((timeNowMs - timeStartMs) < RPI_POWER_TIMEOUT_MS)
     {
          pi_running = SleepyPi.checkPiStatus(true);
          if(pi_running == true)
          {
-            Serial.print(".");
-            delay(100);      // milliseconds   
+            break;  
+         }
+         Serial.print(".");
+         delay(1000);
+         timeNowMs = millis();
+    }
+    while ((timeNowMs - timeStartMs) < RPI_POWER_TIMEOUT_MS)
+    {
+         pi_running = SleepyPi.checkPiStatus(true);
+         if(pi_running == true)
+         {
+            Serial.print("+");
+            delay(1000);      // milliseconds   
+         } else {
+          break;
          }
          timeNowMs = millis();
     }
-    // Did a timeout occur?
-    if((timeNowMs - timeStartMs) >= RPI_POWER_TIMEOUT_MS)
-    {
-       Serial.print("TimeOut!:");
-       if (SleepyPi.readTime(currentTime)) 
-       {
-          printTime(currentTime,false); 
-       }    
+    // Only allow timeout if the button was not pressed
+    if (!buttonPressed){
+      // Did a timeout occur?
+      if((timeNowMs - timeStartMs) >= RPI_POWER_TIMEOUT_MS)
+      {
+         Serial.print("TimeOut!:");
+         if (SleepyPi.readTime(currentTime)) 
+         {
+            printTime(currentTime,false); 
+         } else {
+            Serial.println("RPi Shutdown Itself");     
+         } 
+      }
+    } else {
+      while (pi_running){
+        pi_running = SleepyPi.checkPiStatus(true);
+         if(pi_running == true)
+         {
+            Serial.print("o");
+            delay(1000);      // milliseconds   
+         } else {
+          break;
+         }
+      }
     }
-    else
-    {
-       Serial.println("RPi Shutdown, I'm going back to sleep...");     
-    } 
+    
     SleepyPi.piShutdown(true);      
     SleepyPi.enableExtPower(false); 
     
