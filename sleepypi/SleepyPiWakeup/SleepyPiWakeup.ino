@@ -11,10 +11,10 @@
 #include <Wire.h>
 
 #define RPI_POWER_TIMEOUT_MS     300000    // in ms - so this is 5 minutes
-#define TIME_INTERVAL_SECONDS    0
-#define TIME_INTERVAL_MINUTES    0   
-#define TIME_INTERVAL_HOURS      24
-#define TIME_INTERVAL_DAYS       0
+#define SECONDS_IN_DAY           86400
+#define UTC_HOUR                 2
+#define UTC_MINUTE               00
+#define UTC_SECOND               00
 
 tmElements_t powerUpTime;
 volatile bool  buttonPressed = false;
@@ -44,25 +44,20 @@ void setup()
   pinMode(17, OUTPUT); // set maintenence pin
   // Configure "Standard" LED pin
   pinMode(LED_PIN, OUTPUT);		
-  //digitalWrite(LED_PIN,LOW);		// Switch off LED
+  digitalWrite(LED_PIN,LOW);		// Switch off LED
 
   SleepyPi.enablePiPower(false); 
   SleepyPi.enableExtPower(false);
 
   // initialize serial communication: In Arduino IDE use "Serial Monitor"
   Serial.begin(9600);
-  Serial.println("Starting Vispecs SleepyPiWakeup");
-
-  // Interval that will be used in loop to set up wakeup time
-  powerUpTime.Hour = TIME_INTERVAL_HOURS; // 24 Hours from the wakeup time
+  Serial.println("\n\nStarting Vispecs SleepyPiWakeup");
   
   // Set the alarm for next UTC 2AM (Australian solar noon) then sleep
   SleepyPi.enableWakeupAlarm();
-  SleepyPi.ackAlarm();
-  setUTC2amAlarm();
-  attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
+  
    // Allow wake up triggered by button press
-  attachInterrupt(1, button_isr, LOW);    // button pin 
+  
 }
 
 void loop() 
@@ -70,24 +65,25 @@ void loop()
     unsigned long timeNowMs, timeStartMs;
     tmElements_t  currentTime; 
     bool pi_running;
-  
-    // Allow wake up alarm to trigger interrupt on falling edge.
+
+    // Button interrupt
+    attachInterrupt(1, button_isr, LOW);    // button pin 
+    // Alarm interrupt
     attachInterrupt(0, alarm_isr, FALLING);    // Alarm pin
-    if (buttonPressed) {
-      // Reset alarm & button variable if button was pressed
-      buttonPressed = false;
-      SleepyPi.ackAlarm();
-      setUTC2amAlarm();
-    }
+    
+    buttonPressed = false;
+
+    SleepyPi.ackAlarm();
+    setUTC2amAlarm();
     
     // +++++++++ Test +++++++++++++
     SleepyPi.readTime(currentTime);
-    Serial.print("Going To Sleep:\n");
-    Serial.print("Current Time = ");
-    printTime(currentTime,false); 
-    SleepyPi.readAlarm(currentTime);
-    Serial.print("Alarm Time = ");
-    printTime(currentTime,false); 
+    Serial.print("\nGoing Low Power @: ");
+    printTime(currentTime,true); 
+    time_t alarm;
+    SleepyPi.readAlarm(alarm);
+    Serial.print(alarm);
+    Serial.print(" seconds until next alarm");
     delay(1000);
     // ++++++++++++++++++++++++++++++
     
@@ -95,19 +91,18 @@ void loop()
     // Wake up when wake up pin is low.
     SleepyPi.powerDown(SLEEP_FOREVER, ADC_OFF, BOD_OFF); 
     
-    // Disable external pin interrupt on wake up pin.
+    // Disable external pin interrupts on wake up pins.
     detachInterrupt(0);
-    // Ack old and set a new alarm as soon as the pi wakes up
+    detachInterrupt(1);
+
     SleepyPi.ackAlarm();
-    SleepyPi.setAlarm(powerUpTime); 
     
     SleepyPi.enablePiPower(true);   
-    Serial.print("\n\nI've Just woken up: ");
+    Serial.print("\n\nPower Up @: ");
     SleepyPi.readTime(currentTime);
-    printTime(currentTime,false); 
+    printTime(currentTime,true); 
 
     if (buttonPressed){
-      delay(1000);
       Serial.println("Set Maintenence Pin High");
       digitalWrite(17,HIGH);    // Set pin high to tell Pi that we are in maintenence
     }
@@ -147,7 +142,7 @@ void loop()
          Serial.print("TimeOut!:");
          if (SleepyPi.readTime(currentTime)) 
          {
-            printTime(currentTime,false); 
+            printTime(currentTime,true); 
          } else {
             Serial.println("RPi Shutdown Itself");     
          } 
@@ -160,6 +155,9 @@ void loop()
             Serial.print("o");
             delay(1000);      // milliseconds   
          } else {
+          Serial.print("Shutdown after button maintenence");
+          SleepyPi.readTime(currentTime);
+          printTime(currentTime,true); 
           break;
          }
       }
@@ -171,43 +169,21 @@ void loop()
 }
 
 void setUTC2amAlarm() {
-  tmElements_t  currentTime, firstAlarm;
-  // Grab the time from the RTC
-  SleepyPi.readTime(currentTime);
-  Serial.print("Read Time = ");
-    printTime(currentTime,false); 
 
-  // Calculate number of hours to add
-  int hours = 0;
-  if (currentTime.Hour){
-    
-    hours = (24-currentTime.Hour + 2)%24;
-  }
+  // Set the system time from the RTC
+  time_t timeRTC;
+  RTC.readTime(timeRTC);
+  setTime(timeRTC);
 
-  // Calculate number of mins to add
-  int minutes = 0;
-  if (currentTime.Minute){
-    
-    minutes = 60-currentTime.Minute;
-    hours--;
-  }
+  time_t secondsInToToday = now() % (SECONDS_IN_DAY);
+  // Find seconds fromUTC midnight a 2 AM alarm should be
+  time_t baseAlarm = UTC_HOUR*3600 + UTC_MINUTE*60 + UTC_SECOND;
+  
+  // Calculate time to next base alarm
+  time_t secsToNextAlarm = (baseAlarm + SECONDS_IN_DAY - secondsInToToday) % SECONDS_IN_DAY;
 
-  // Calculate the number of seconds to add
-  int seconds = 0;
-  if (currentTime.Second){
-    seconds = 60-currentTime.Second;
-    minutes--;
-  }
-
-  firstAlarm.Second = seconds;
-  firstAlarm.Minute = minutes;
-  firstAlarm.Hour = hours;
-
-  Serial.print("Time for first alarm: ");
-  printTime(firstAlarm, false);
-
-  // Set an alarm for this duration
-  SleepyPi.setAlarm(firstAlarm);
+  //Set an alarm for this time
+  SleepyPi.setAlarm(secsToNextAlarm);
 }
 
 
