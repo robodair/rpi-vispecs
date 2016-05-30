@@ -15,9 +15,6 @@ def monitor():
     wait for timeout signal """
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(24, GPIO.IN)
-    GPIO.setup(25, GPIO.OUT)
-    GPIO.output(25, GPIO.HIGH)
-    print "[  Info  ] Telling Sleepy Pi we are running pin 25"
 
     while True:
         if GPIO.input(24):
@@ -28,8 +25,13 @@ def monitor():
 
 def is_maintenence_mode():
     """checks to see if we are recieving a signal that we are in
-    maintenence mode """
+    maintenence mode, also lets the sleepypi know that we are running """
     GPIO.setmode(GPIO.BCM)
+
+    GPIO.setup(25, GPIO.OUT)
+    GPIO.output(25, GPIO.HIGH)
+    print "[  Info  ] Telling Sleepy Pi we are running pin 25"
+
     GPIO.setup(24, GPIO.IN)
     # If pin 24 is ALREADY high, the arduino is telling us that code shouldn't
     # Be allowed to start
