@@ -52,12 +52,6 @@ void setup()
   // initialize serial communication: In Arduino IDE use "Serial Monitor"
   Serial.begin(9600);
   Serial.println("\n\nStarting Vispecs SleepyPiWakeup");
-  
-  // Set the alarm for next UTC 2AM (Australian solar noon) then sleep
-  SleepyPi.enableWakeupAlarm();
-  
-   // Allow wake up triggered by button press
-  
 }
 
 void loop() 
@@ -73,7 +67,6 @@ void loop()
     
     buttonPressed = false;
 
-    SleepyPi.ackAlarm();
     setUTC2amAlarm();
     
     // +++++++++ Test +++++++++++++
@@ -94,8 +87,6 @@ void loop()
     // Disable external pin interrupts on wake up pins.
     detachInterrupt(0);
     detachInterrupt(1);
-
-    SleepyPi.ackAlarm();
     
     SleepyPi.enablePiPower(true);   
     Serial.print("\n\nPower Up @: ");
@@ -183,6 +174,8 @@ void setUTC2amAlarm() {
   time_t secsToNextAlarm = (baseAlarm + SECONDS_IN_DAY - secondsInToToday) % SECONDS_IN_DAY;
 
   //Set an alarm for this time
+  SleepyPi.ackAlarm();
+  SleepyPi.enableWakeupAlarm();
   SleepyPi.setAlarm(secsToNextAlarm);
 }
 
